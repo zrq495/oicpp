@@ -87,8 +87,10 @@
       "selectPerMachineByDefault": false,
       "allowToChangeInstallationDirectory": true,
       "allowElevation": true
-    },    "mac": {
+    },
+    "mac": {
       "icon": "build/icons/png",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
       "extraResources": [
         {
           "from": "build/clangd/darwin",

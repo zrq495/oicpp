@@ -9,6 +9,10 @@ permissions:
 jobs:
   build-dmg-test:
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,11 +38,11 @@ jobs:
           npm run prebuild:buildinfo
           npm run prebuild:icons
           test -f build/icons/png/512x512.png
-          npx electron-builder --mac dmg
+          npx electron-builder --mac dmg --${{ matrix.arch }}
 
       - name: Upload .dmg artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dmg-test-artifacts
+          name: dmg-test-${{ matrix.arch }}-artifacts
           path: dist/*.dmg
           if-no-files-found: error
