@@ -35,6 +35,9 @@ jobs:
           node-version: 20
           cache: "npm"
 
+      - name: Set package version
+        run: npm version "${VERSION#v}" --no-git-tag-version --allow-same-version
+
       - name: Install dependencies
         run: |
           npm install --include=optional
@@ -94,9 +97,17 @@ jobs:
           UPLOAD_API: ${{ secrets.UPLOAD_API }}
           UPLOAD_TOKEN: ${{ secrets.UPLOAD_TOKEN }}
         run: |
+          if [ -z "$UPLOAD_API" ]; then
+            echo "::error::UPLOAD_API secret is not configured; cannot upload Linux packages."
+            exit 1
+          fi
+          if [ -z "$UPLOAD_TOKEN" ]; then
+            echo "::error::UPLOAD_TOKEN secret is not configured; cannot upload Linux packages."
+            exit 1
+          fi
           VERSION=$VERSION
           VERSION=${VERSION#v}
-          echo "Uploading packages for version $VERSION to $UPLOAD_API"
+          echo "Uploading Linux packages for version $VERSION"
           for f in dist/*.deb dist/*.rpm dist/*.AppImage; do
             [ -f "$f" ] || continue
             echo "Uploading $f"
@@ -127,6 +138,9 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
+
+      - name: Set package version
+        run: npm version "${VERSION#v}" --no-git-tag-version --allow-same-version
 
       - name: Install dependencies
         run: |
@@ -162,9 +176,17 @@ jobs:
           UPLOAD_API: ${{ secrets.UPLOAD_API }}
           UPLOAD_TOKEN: ${{ secrets.UPLOAD_TOKEN }}
         run: |
+          if [ -z "$UPLOAD_API" ]; then
+            echo "::error::UPLOAD_API secret is not configured; cannot upload macOS packages."
+            exit 1
+          fi
+          if [ -z "$UPLOAD_TOKEN" ]; then
+            echo "::error::UPLOAD_TOKEN secret is not configured; cannot upload macOS packages."
+            exit 1
+          fi
           VERSION=$VERSION
           VERSION=${VERSION#v}
-          echo "Uploading packages for version $VERSION to $UPLOAD_API"
+          echo "Uploading macOS packages for version $VERSION"
           for f in dist/*.dmg; do
             [ -f "$f" ] || continue
             echo "Uploading $f"
@@ -193,6 +215,10 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
+
+      - name: Set package version
+        shell: powershell
+        run: npm version $env:VERSION --no-git-tag-version --allow-same-version
 
       - name: Install NSIS
         shell: powershell
@@ -341,11 +367,19 @@ jobs:
           UPLOAD_TOKEN: ${{ secrets.UPLOAD_TOKEN }}
         shell: bash
         run: |
+          if [ -z "$UPLOAD_API" ]; then
+            echo "::error::UPLOAD_API secret is not configured; cannot upload Windows package."
+            exit 1
+          fi
+          if [ -z "$UPLOAD_TOKEN" ]; then
+            echo "::error::UPLOAD_TOKEN secret is not configured; cannot upload Windows installer."
+            exit 1
+          fi
           VERSION=$VERSION
           echo "Looking for installer for version: $VERSION"
           FILE=$(ls OICPP-*-Setup.exe | head -n 1)
           if [ -z "$FILE" ]; then echo "No installer found, skipping upload"; exit 0; fi
-          echo "Uploading $FILE to $UPLOAD_API"
+          echo "Uploading Windows installer for version $VERSION"
           curl -s -X POST -H "Authorization: Bearer $UPLOAD_TOKEN" -F "file=@$FILE" -F "version=$VERSION" -F "platform=windows" "$UPLOAD_API"
 
   release:
